@@ -212,7 +212,7 @@ read:errno=0
 ## 其他相关知识
 
 ### HSTS
-[HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) 是一套由互联网工程任务组发布的互联网安全策略机制。由于存在 HSTS 机制，证书如果配置错误可能对用户造成极大损害，因为 HSTS 缓存是需要手动清除。
+[HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) 是一套由互联网工程任务组发布的互联网安全策略机制。由于该机制的存在，证书如果配置错误可能对用户造成极大损害，因为 HSTS 缓存是需要手动清除。
 
 #### 响应头格式
 ```text
