@@ -16,6 +16,7 @@ social:
 - {icon: 'twitter', link: 'https://twitter.com/gaius_qi'}
 - {icon: 'weibo', link: 'https://weibo.com/2037081677'}
 - {icon: 'envelope', link: 'mailto:gaius.qi@gmail.com'}
+- {icon: 'rss-square', link: '/feed.xml'}
 
 # Customize site text
 pagination:
