@@ -167,9 +167,14 @@ hr {
   padding-bottom: 2rem;
 }
 
+.related h1 {
+  font-size: 23px;
+}
+
 .related-posts {
   padding-left: 0px;
   list-style: none;
+  font-size: 15px;
 }
 
 .related-posts a {
