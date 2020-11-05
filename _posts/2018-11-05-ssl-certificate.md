@@ -239,3 +239,48 @@ Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来�
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkeg8ltl3kj31ke0u0al1.jpg)
 
+### PGP 加密证书私钥
+
+一般情况下 SSL 证书私钥发放通过 Email 等方式, 传输过程中需要加密传输, 常见加密方式为 PGP。
+
+#### PGP
+[PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) 加密程序通过一系列密码技术，为数据通讯提供安全隐私、认证。PGP 软件一般遵循 [OpenPGP 标准](https://tools.ietf.org/html/rfc4880), 可用于：
+
+- 数字签名
+- 加密文本、电邮、文件目录、整盘加密
+
+#### macOS 使用 PGP
+
+> PGP Suite: [https://gpgtools.org](https://gpgtools.org)
+
+下载安装 PGP 软件包后进入 Terminal。
+
+生成密钥对:
+```bash
+gpg --gen-key
+```
+
+导入其他公钥:
+```bash
+gpg --import pub.asc
+```
+
+导出本地公钥:
+```bash
+gpg --export keyId > pub.asc
+```
+
+文件加密:
+```bash
+gpg -e -a -r keyId filename
+```
+
+文件解密:
+```bash
+gpg -d filename
+```
+
+查看PGP公钥/文件的属性信息:
+```bash
+gpg filename
+```
