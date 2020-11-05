@@ -219,7 +219,7 @@ read:errno=0
 Strict-Transport-Security: max-age=expireTime [; includeSubDomains] [; preload]
 ```
 
-#### 浏览器处理方式
+#### 处理方式
 你的网站第一次通过HTTPS请求，服务器响应Strict-Transport-Security 头，浏览器记录下这些信息，然后后面尝试访问这个网站的请求都会自动把HTTP替换为HTTPS。
 
 当HSTS头设置的过期时间到了，后面通过HTTP的访问恢复到正常模式，不会再自动跳转到HTTPS。
@@ -228,7 +228,7 @@ Strict-Transport-Security: max-age=expireTime [; includeSubDomains] [; preload]
 
 Chrome、Firefox等浏览器里，当您尝试访问该域名下的内容时，会产生一个307 Internal Redirect（内部跳转），自动跳转到HTTPS请求。
 
-#### 浏览器操做
+#### 浏览器功能
 Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来查询域名对应 HSTS 设置。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkeg6opnjnj327n0u044i.jpg)
