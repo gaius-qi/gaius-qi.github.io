@@ -228,6 +228,8 @@ Strict-Transport-Security: max-age=expireTime [; includeSubDomains] [; preload]
 
 Chrome、Firefox等浏览器里，当您尝试访问该域名下的内容时，会产生一个307 Internal Redirect（内部跳转），自动跳转到HTTPS请求。
 
+![](https://tva1.sinaimg.cn/large/0081Kckwly1gkegum13f3j327w0hm0zm.jpg)
+
 #### 浏览器功能
 Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来查询域名对应 HSTS 设置。
 
