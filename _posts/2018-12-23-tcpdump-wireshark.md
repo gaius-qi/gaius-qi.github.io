@@ -4,7 +4,7 @@ title: "Tcpdump & Wireshark"
 author: "Gaius"
 categories: Devops
 tags: [documentation]
-image: tcpdump-wireshark.gif
+image: tcpdump-wireshark.png
 ---
 
 ## TCP 标志位(TCP Flags)
