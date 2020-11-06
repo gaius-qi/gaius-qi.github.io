@@ -57,4 +57,3 @@ Pod dnsPolicy 为 ClusterFirst，则使用集群 DNS，而非宿主机 DNS 配�
 CoreDNS SVC 对应 Virtual IP，即 Pod 中 DNS 配置文件 nameserver 服务器 IP。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkfr6vf7bhj30s404mabf.jpg)
-
