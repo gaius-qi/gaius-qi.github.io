@@ -4,7 +4,7 @@ title: "DNS & CoreDNS"
 author: "Gaius"
 categories: Devops
 tags: [documentation]
-image: dns-coredns.webp
+image: dns-coredns.jpg
 ---
 
 ## DNS
