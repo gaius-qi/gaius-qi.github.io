@@ -50,7 +50,7 @@ Pod dnsPolicy 为 ClusterFirst，则使用集群 DNS，而非宿主机 DNS 配�
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkfr1so3umj30iu0qdgpb.jpg)
 
-查看 Pod 中 DNS 配置文件 /etc/resolv.conf。nameserver 即为 CoreDNS SVC 对应 Virtual IP。search 为搜索列表。options ndots 表示大于特定数字，不走 search 按照原域名进行解析，否则会按照 search 列表中逐一匹配查询，如果都是 Not Found 则按照原域名进行解析。
+查看 Pod 中 DNS 配置文件 /etc/resolv.conf。nameserver 即为 CoreDNS Service 对应 Virtual IP。search 为搜索列表。options ndots 表示大于特定数字，不走 search 按照原域名进行解析，否则会按照 search 列表中逐一匹配查询，如果都是 Not Found 则按照原域名进行解析。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkfquvrxxbj30h5021jrk.jpg)
 
