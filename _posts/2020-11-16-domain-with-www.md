@@ -50,5 +50,3 @@ WWW 解析记录可以看作顶点记录的一个子域，类似 `zh.airbnb.com`
 www.airbnb.com      => *.alipay.com
 airbnb.com          => alipay.com
 ```
-
-
