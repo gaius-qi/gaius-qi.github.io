@@ -20,7 +20,9 @@ image: domain-with-www.jpg
 ### 顶点记录 & CNAME
 [RFC 1034 3.6.2](http://www.faqs.org/rfcs/rfc1034.html) 给不推荐顶点记录添加 CNAME，需要直接配置 A 记录。万网的权威 DNS 服务，如果给顶点记录直接添加 CNAME 会直接报错。
 
-主要原因是假如给 `airbnb.com` 顶点记录添加 CNAME 至 `facebook.com`，则相当于给 `airbnb.com` 添加 Alias `facebook.com`。则第一次访问 `airbnb.com` 会把 `facebook.com` 记录本机缓存，下次访问 `airbnb.com` 则直接使用本地缓存直接访问 `facebook.com`。同时被 Alias 的还有 MX(Mail eXchange) 记录即邮箱服务记录, 也就导致给 `airbnb.com` 发送邮件相当于给 `facebook.com` 发送邮件。而反过来先发送邮件，再访问网页则会给 `airbnb.com` 发送邮件，因为本地没有缓存 CNAME。
+主要原因是假如给 `airbnb.com` 顶点记录添加 CNAME 至 `facebook.com`，则相当于给 `airbnb.com` 添加 Alias `facebook.com`。则第一次访问 `airbnb.com` 会把 `facebook.com` 记录本机缓存，下次访问 `airbnb.com` 则直接使用本地缓存直接访问 `facebook.com`。
+
+同时被 Alias 的还有 MX(Mail eXchange) 记录即邮箱服务记录, 也就导致给 `airbnb.com` 发送邮件相当于给 `facebook.com` 发送邮件。而反过来先发送邮件，再访问网页则会给 `airbnb.com` 发送邮件，因为本地没有缓存 CNAME。
 
 正常访问逻辑应该是 `airbnb.com` 网页访问到 `facebook.com`, 但是发送邮件到 `airbnb.com`。当添加 CNAME 给顶点记录时会导致邮箱服务出现问题。
 
