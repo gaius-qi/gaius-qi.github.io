@@ -107,3 +107,142 @@ func (cb *CircuitBreaker) Execute(req func() (interface{}, error)) (interface{},
 }
 ```
 
+生成新的 generation，expiry 为过期时间，当状态为 Open 时 expiry 为当前时间加 Setting 中的 Timeout 恢复时间，当状态为 Closed 时 expiry 为当前时间加 Setting 中的 Interval 一个监视周期时间。生成新的 generation 会清空 counts 内值。
+```golang
+func (cb *CircuitBreaker) toNewGeneration(now time.Time) {
+	cb.generation++
+	cb.counts.clear()
+
+	var zero time.Time
+	switch cb.state {
+	case StateClosed:
+		if cb.interval == 0 {
+			cb.expiry = zero
+		} else {
+			cb.expiry = now.Add(cb.interval)
+		}
+	case StateOpen:
+		cb.expiry = now.Add(cb.timeout)
+	default: // StateHalfOpen
+		cb.expiry = zero
+	}
+}
+
+func (c *Counts) clear() {
+	c.Requests = 0
+	c.TotalSuccesses = 0
+	c.TotalFailures = 0
+	c.ConsecutiveSuccesses = 0
+	c.ConsecutiveFailures = 0
+}
+```
+
+currentState 获取当前状态, 当 Closed 状态时, expiry 过期时间为 0 即达到一个监视周期时间则生成新的 generation, 清空 counts 内值。当 Open 状态时, expiry 过期时间为 0 时即到达恢复时间, 设置为 Half-Open 状态。
+```golang
+func (cb *CircuitBreaker) currentState(now time.Time) (State, uint64) {
+	switch cb.state {
+	case StateClosed:
+		if !cb.expiry.IsZero() && cb.expiry.Before(now) {
+			cb.toNewGeneration(now)
+		}
+	case StateOpen:
+		if cb.expiry.Before(now) {
+			cb.setState(StateHalfOpen, now)
+		}
+	}
+	return cb.state, cb.generation
+}
+```
+
+beforeRequest 给 Requests 变量加互斥锁, 防止竞争。currentState 获取当前状态, 通过熔断器三种状态执行不同操作:
+
+- 当 Open 状态时直接抛错。
+
+- 当 Half-Open 且 counts 中累计 Request 大于 Half-Open 状态 maxRequest 阈值时直接返回错误。
+
+- 当 Closed 或 Half-Open 且累计 Request 小于 Half-Open 状态 maxRequest 阈值时, Request 请求数加一。
+
+```golang
+func (cb *CircuitBreaker) beforeRequest() (uint64, error) {
+	cb.mutex.Lock()
+	defer cb.mutex.Unlock()
+
+	now := time.Now()
+	state, generation := cb.currentState(now)
+
+	if state == StateOpen {
+		return generation, ErrOpenState
+	} else if state == StateHalfOpen && cb.counts.Requests >= cb.maxRequests {
+		return generation, ErrTooManyRequests
+	}
+
+	cb.counts.onRequest()
+	return generation, nil
+}
+
+func (c *Counts) onRequest() {
+	c.Requests++
+}
+```
+
+afterRequest 给 counts 变量加互斥锁, 防止竞争。操作执行后分为两种状态:
+
+- 操作执行成功调用 onSuccess, onSuccess 为 Closed 时则更改 count 计数, 当为 Half-Open 时则更改 count 计数且对比 ConsecutiveSuccesses 量即连续成功操作次数是否大于 maxRequest，如果大于则更改状态为 Closed。
+
+- 操作执行失败调用 onFailure, onFailure 为 Closed 时则更改 count 计数, readyToTrip 为 true 则状态变为 Open, 当为 Half-Open 状态变为 Open。
+
+```golang
+func (cb *CircuitBreaker) afterRequest(before uint64, success bool) {
+    cb.mutex.Lock()
+    defer cb.mutex.Unlock()
+
+    now := time.Now()
+    state, generation := cb.currentState(now)
+    if generation != before {
+        return
+    }
+
+    if success {
+        cb.onSuccess(state, now)
+    } else {
+        cb.onFailure(state, now) 
+    }
+}
+
+func (cb *CircuitBreaker) onSuccess(state State, now time.Time) {
+	switch state {
+	case StateClosed:
+		cb.counts.onSuccess()
+	case StateHalfOpen:
+		cb.counts.onSuccess()
+		if cb.counts.ConsecutiveSuccesses >= cb.maxRequests {
+			cb.setState(StateClosed, now)
+		}
+	}
+}
+
+func (c *Counts) onSuccess() {
+	c.TotalSuccesses++
+	c.ConsecutiveSuccesses++
+	c.ConsecutiveFailures = 0
+}
+
+func (cb *CircuitBreaker) onFailure(state State, now time.Time) {
+	switch state {
+	case StateClosed:
+		cb.counts.onFailure()
+		if cb.readyToTrip(cb.counts) {
+			cb.setState(StateOpen, now)
+		}
+	case StateHalfOpen:
+		cb.setState(StateOpen, now)
+	}
+}
+
+func (c *Counts) onFailure() {
+	c.TotalFailures++
+	c.ConsecutiveFailures++
+	c.ConsecutiveSuccesses = 0
+}
+```
+
