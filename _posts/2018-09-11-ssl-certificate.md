@@ -10,14 +10,17 @@ image: ssl-certificate.png
 SSL 证书实践过程中，避免不了遇到各种问题，本文主要介绍实践过程中相关经验。
 
 ## 概念
+
 ## SSL、TLS & HTTPS
+
 SSL: 指安全套接字层，简而言之，它是一项标准技术，可确保互联网连接安全，保护两个系统之间发送的任何敏感数据。
 
 TLS: 传输层安全是更为安全的升级版 SSL。
 
-HTTPS: 基于TLS/SSL的安全套接字上的的应用层协议，除了传输层进行了加密外，其它与常规HTTP协议基本保持一致。
+HTTPS: 基于 TLS/SSL 的安全套接字上的的应用层协议，除了传输层进行了加密外，其它与常规 HTTP 协议基本保持一致。
 
 ## TLS 版本
+
 可以通过 [ssl-labs](https://www.ssllabs.com/ssltest/analyze.html) 来检查, 域名对应 TLS 版本信息。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkeexgqk82j31gc0dgta4.jpg)
@@ -27,25 +30,33 @@ NGINX: 配置 TLS 版本参考 [ssl-protocols](http://nginx.org/en/docs/http/ngx
 NGINX Ingress: 默认使用兼容性好且安全性高的 TLS v1.2, 配置具体版本参考 [configmap-ssl-protocols](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#ssl-protocols)。
 
 ## 证书
+
 ### 证书链分级
-完整的证书内容一般分为3级，服务端证书-中间证书-根证书，即 End-user Certificates， Intermediates Certificates 和 Root Certificates。
-- End-user Certificates：用来加密传输数据的公钥的证书，是https中使用的证书。开发者把证书部署在 marmot-cloud.com 服务器上。
-- Intermediates Certificates：CA用来认证公钥持有者身份的证书，即确认 https 使用的 end-user 证书是属于 marmot-cloud.com 的证书。
+
+完整的证书内容一般分为 3 级，服务端证书-中间证书-根证书，即 End-user Certificates， Intermediates Certificates 和 Root Certificates。
+
+- End-user Certificates：用来加密传输数据的公钥的证书，是 https 中使用的证书。开发者把证书部署在 marmot-cloud.com 服务器上。
+- Intermediates Certificates：CA 用来认证公钥持有者身份的证书，即确认 https 使用的 end-user 证书是属于 marmot-cloud.com 的证书。
 - Root Certificates：用来认证 intermediates 证书是合法证书的证书。
 
 ### 证书链修复
+
 证书链不完整常会报错如下:
+
 ```text
 the certificate is not trusted in all web browsers. you may need to install an intermediate/chain certificate to link it to a trusted root certificate.
 ```
+
 引起该问题原因有很多, 比如老版本客户端系统 Root Certificates 未默认集成导致证书链不全。可以通过提供 End-user Certificates 基于 [my-ssl](https://myssl.com/chain_download.html) 来修复完成证书链。
 
 ### 证书链查询
+
 ```bash
 openssl s_client -servername airbnb.com -connect airbnb.com:443 -showcerts
 ```
 
 查询结果显示, 0 级为 End-user Certificates(airbnb.com), 1 级为 Intermediates Certificates, 2 级为 Root Certificates。
+
 ```text
 CONNECTED(00000006)
 depth=2 C = US, O = DigiCert Inc, OU = www.digicert.com, CN = DigiCert Global Root CA
@@ -205,6 +216,7 @@ read:errno=0
 ```
 
 ### 查看证书支持域名
+
 可以通过浏览器查看当前域名所持有证书, 支持的域名列表。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwgy1gkefi8tt8uj30qw0py41o.jpg)
@@ -212,25 +224,29 @@ read:errno=0
 ## 其他相关知识
 
 ### HSTS
+
 [HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) 是一套由互联网工程任务组发布的互联网安全策略机制。由于该机制的存在，证书如果配置错误可能对用户造成极大损害，因为 HSTS 缓存是需要手动清除。
 
 #### 响应头格式
+
 ```text
 Strict-Transport-Security: max-age=expireTime [; includeSubDomains] [; preload]
 ```
 
 #### 处理方式
-你的网站第一次通过HTTPS请求，服务器响应Strict-Transport-Security 头，浏览器记录下这些信息，然后后面尝试访问这个网站的请求都会自动把HTTP替换为HTTPS。
 
-当HSTS头设置的过期时间到了，后面通过HTTP的访问恢复到正常模式，不会再自动跳转到HTTPS。
+你的网站第一次通过 HTTPS 请求，服务器响应 Strict-Transport-Security 头，浏览器记录下这些信息，然后后面尝试访问这个网站的请求都会自动把 HTTP 替换为 HTTPS。
 
-每次浏览器接收到Strict-Transport-Security头，它都会更新这个网站的过期时间，所以网站可以刷新这些信息，防止过期发生。
+当 HSTS 头设置的过期时间到了，后面通过 HTTP 的访问恢复到正常模式，不会再自动跳转到 HTTPS。
 
-Chrome、Firefox等浏览器里，当您尝试访问该域名下的内容时，会产生一个307 Internal Redirect（内部跳转），自动跳转到HTTPS请求。
+每次浏览器接收到 Strict-Transport-Security 头，它都会更新这个网站的过期时间，所以网站可以刷新这些信息，防止过期发生。
+
+Chrome、Firefox 等浏览器里，当您尝试访问该域名下的内容时，会产生一个 307 Internal Redirect（内部跳转），自动跳转到 HTTPS 请求。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkegum13f3j327w0hm0zm.jpg)
 
 #### 浏览器功能
+
 Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来查询域名对应 HSTS 设置。
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gkeg6opnjnj327n0u044i.jpg)
@@ -244,6 +260,7 @@ Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来�
 一般情况下 SSL 证书私钥发放通过 Email 等方式, 传输过程中需要加密传输, 常见加密方式为 PGP。
 
 #### PGP
+
 [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) 加密程序通过一系列密码技术，为数据通讯提供安全隐私、认证。PGP 软件一般遵循 [OpenPGP 标准](https://tools.ietf.org/html/rfc4880), 可用于：
 
 - 数字签名
@@ -256,31 +273,37 @@ Chrome 浏览器内可以通过访问 chrome://net-internals/#hsts 链接，来�
 下载安装 PGP 软件包后进入 Terminal。
 
 生成密钥对:
+
 ```bash
 gpg --gen-key
 ```
 
 导入其他公钥:
+
 ```bash
 gpg --import pub.asc
 ```
 
 导出本地公钥:
+
 ```bash
 gpg --export keyId > pub.asc
 ```
 
 文件加密:
+
 ```bash
 gpg -e -a -r keyId filename
 ```
 
 文件解密:
+
 ```bash
 gpg -d filename
 ```
 
-查看PGP公钥/文件的属性信息:
+查看 PGP 公钥/文件的属性信息:
+
 ```bash
 gpg filename
 ```

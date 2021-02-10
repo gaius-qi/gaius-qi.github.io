@@ -8,6 +8,7 @@ image: tcpdump-wireshark.png
 ---
 
 ## TCP 标志位(TCP Flags)
+
 > Transmission Control Protocol: [https://en.wikipedia.org/wiki/Transmission_Control_Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
 
 ![](https://tva1.sinaimg.cn/large/0081Kckwgy1gkelu9itx8j30vc0dgjtn.jpg)
@@ -18,7 +19,7 @@ CWR & ECE: 用来配合做 congestion control，一般情况下和应用层关�
 
 URG: 表示 TCP 包的紧急指针域有效。用来保证 TCP 连接不被中断，并且督促中间层设备要尽快处理这些数据。
 
-ACK: 表示应答域有效。有两个取值 0 和 1，为 1 的时候表示应答域有效，反之为0。
+ACK: 表示应答域有效。有两个取值 0 和 1，为 1 的时候表示应答域有效，反之为 0。
 
 PSH: 表示 Push 操作。所谓 Push 操作就是指在数据包到达接收端以后，立即传送给应用程序， 而不是在缓冲区中排队。
 
@@ -40,6 +41,7 @@ TCP Flags 用 RST 表示复位，用来表示异常关闭连接。发送 RST 包
 ## 线上排查过程
 
 排查请求异常断连, 应用日志显示为 Read ECONNRESET 其实日志内容已经告诉了问题原因, ECONNRESET 即收到了 TCP RST 报文。
+
 ```bash
 Error: read ECONNRESET at TCP.onStreamRead (internal/stream_base_commons.js:200:27) {
   errno: 'ECONNRESET',
@@ -83,22 +85,26 @@ tcpdump -i any -w out.pcap
 ```
 
 或者根据 IP 进行抓包。
+
 ```bash
 tcpdump -i any host 8.8.8.8 -w out.pcap
 ```
 
 out.pcap 文件导出, 权限限制情况下 scp 不可取。所以用 OSS 当媒介上传, 安装阿里云 OSS Client。
+
 ```bash
 wget http://gosspublic.alicdn.com/ossutil/1.6.18/ossutil64
 chmod 755 ossutil64
 ```
 
 生成 OSS 相关配置文件。
+
 ```bash
 ./ossutil64 config -e oss-ap-southeast-1.aliyuncs.com -i ak-id -k ak-secret  -L CH -c ./myconfig
 ```
 
 上传 .pcap 文件至 OSS。
+
 ```bash
 ./ossutil64 cp out.pcap oss://oss-ap-southeast-1.aliyuncs.com/out.pcap --config-file ./myconfig
 ```
@@ -127,4 +133,3 @@ out.pcap 在 Wireshark 中打开进行分析。
 
 原因为服务端发送 RST 报文中止请求导致。正常情况下中止是通过服务端发送 FIN 四次挥手结束的。
 ![](https://tva1.sinaimg.cn/large/0081Kckwly1gken6d62wwj31df0u0180.jpg)
-
